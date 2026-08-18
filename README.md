@@ -1,100 +1,205 @@
 # Lossless Video Cutter
 
-A privacy-friendly, self-contained video cutter for the browser. Choose a range and cut it **without re-encoding**: FFmpeg copies the compressed video/audio packets into a new file instead of decoding and encoding them again.
+[![GitHub Pages](https://github.com/ttomohisa/htmlapps-lossless-video-cutter/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/ttomohisa/htmlapps-lossless-video-cutter/actions/workflows/deploy-pages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Single HTML](https://img.shields.io/badge/distribution-single%20HTML-0ea5e9)](https://ttomohisa.github.io/htmlapps-lossless-video-cutter/)
 
-- No upload
-- No runtime network access
-- Single generated HTML file
-- MP4 / M4V / MOV / MKV / WebM
-- Large inputs use WORKERFS instead of copying the whole source into MEMFS first
-- Two-handle S/E range timeline with a draggable current-position playhead; the source video has no duplicate native seek bar
-- Source preview keeps only a simple play/pause control; all seeking is centralized on the timeline
-- Start/end fields auto-initialize to the full duration and stay synchronized with the handles
-- Post-cut K marker plus requested/actual start and alignment delta
-- Japanese / English UI
+[日本語版 README](README.ja.md)
 
-[日本語 README](README.ja.md)
+A privacy-focused, single-HTML video cutter that trims supported videos **without re-encoding**. The app copies the already-compressed media streams into a new file, so cutting is fast and does not introduce generation loss from another encode.
 
-## What makes it different
+## 🚀 Live demo
 
-This is not a lightweight front end around the full FFmpeg CLI. It uses the dedicated `lossless-video-cutter` profile from [ttomohisa/htmlapps-ffmpeg-wasm-builder](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder), pinned to **v1.1.0**.
+### [Open Lossless Video Cutter on GitHub Pages](https://ttomohisa.github.io/htmlapps-lossless-video-cutter/)
 
-That profile contains only the FFmpeg pieces needed to demux and remux the supported containers. There is no video/audio decoder, encoder, scale filter, swscale, swresample, or x264 in this core.
+GitHub Pages delivers the initial HTML. After it loads, video preview, thumbnail generation, range selection, FFmpeg processing, saving, and sharing are handled locally on your device. The video you select is not uploaded by the app.
 
-The browser passes the selected `File`/`Blob` to a Worker and mounts it through Emscripten WORKERFS. FFmpeg can then seek and read slices from a large input without first calling `file.arrayBuffer()` for the entire source.
+## Features
 
-## Keyframe-aligned starts
+- Cut video without re-encoding the video or audio streams
+- MP4 / M4V / MOV / MKV / WebM container support
+- Editor-style timeline with local thumbnail filmstrip
+- Independent S / E handles for the cut range
+- Draggable white playhead for preview seeking; no duplicate native seek bar
+- Direct start/end time entry and “use current position” controls
+- Start = 0 and End = video duration are filled automatically when possible
+- Optional audio removal without re-encoding the video
+- Confirmation before cutting the entire unchanged range
+- Confirmation before switching to another video
+- Save filename editing beside the result Save action
+- Save and Share actions after a successful cut
+- Mobile bottom action bar with Video / Range / Cut / Save
+- Actual start position shown after processing when keyframe alignment changes it
+- Start-position details collapsed by default for a simpler result view
+- Japanese / English UI in the same HTML
+- Embedded SVG favicon and FFmpeg WASM runtime
+- Large inputs use WORKERFS so the whole source file is not copied into MEMFS before processing starts
 
-“Lossless” does not mean arbitrary frame-accurate cutting. Inter-frame video such as H.264 or HEVC normally needs a decodable keyframe at the beginning of the output.
+## Quick start
 
-If you request `00:13.400`, the actual start may become something like `00:12.967`. After processing, the app places a **K marker** on the timeline and shows the requested start, actual start, and the exact backward shift in the result card. This avoids re-encoding while keeping the output decodable.
+### Use the web demo
 
-## Build
+Just [open the demo](https://ttomohisa.github.io/htmlapps-lossless-video-cutter/). No installation or account is required.
 
-On Windows, double-click:
+### Use the downloadable single HTML
+
+1. Build or download `lossless-video-cutter.html` from this repository.
+2. Open it in a current Chromium-based browser. Other modern browsers may also work depending on media/container support.
+3. Choose a supported video and start cutting.
+
+The generated HTML contains the FFmpeg JavaScript and WebAssembly assets it needs at runtime.
+
+### Build it for fully offline use (advanced)
+
+1. Download or clone this repository.
+2. Double-click `build-standalone.bat` on Windows.
+3. The first build downloads the exact FFmpeg WASM Builder release pinned in `dependencies.json`.
+4. The release archive is verified against `SHA256SUMS.txt` before its assets are embedded.
+5. Copy `dist/index.html` wherever you need it and open that single file later without an internet connection.
+
+Python, Node.js, and a local web server are not required. The build uses Windows PowerShell.
+
+## Usage
+
+1. Choose or drop a supported video.
+2. Drag the **S** and **E** handles to choose the range you want to keep.
+3. Drag the white playhead to preview another position without changing the selected range.
+4. Fine-tune Start / End with the time fields or the current-position buttons when needed.
+5. Optionally enable **Remove audio**.
+6. Press **Cut**. If the range is still the entire video, the app asks for confirmation first.
+7. After the cut finishes, preview the result and open **Start position details** only if you want to inspect any automatic start adjustment.
+8. Edit the save filename beside the result actions, then choose **Save** or **Share**.
+
+### Start positions and keyframes
+
+“Lossless” here means the app avoids decoding and re-encoding the compressed media. It does **not** mean every arbitrary frame can become the first frame of the new file.
+
+Inter-frame codecs such as H.264 or HEVC may require the output to begin at an earlier decodable keyframe. For example, a requested start of `00:13.400` may become `00:12.967`. When that happens, the app shows a **K** marker on the timeline and keeps the requested/actual timing details available in a collapsed result section.
+
+### Timeline controls
+
+- **S**: start of the selected range
+- **E**: end of the selected range
+- **White playhead**: current preview position; it moves only when you actively drag it or use keyboard controls
+- **K**: actual start used by the completed cut when keyframe alignment changed the requested start
+
+When the browser can decode the source for preview, the app generates lightweight timeline thumbnails locally. A format can still be cut by manual time entry even when browser preview is unavailable.
+
+### Keyboard controls for the playhead
+
+| Shortcut | Action |
+| --- | --- |
+| `←` / `→` | Move the playhead by 0.5 seconds |
+| `Shift` + `←` / `→` | Move the playhead by 5 seconds |
+| `Home` | Jump to the beginning |
+| `End` | Jump to the end |
+
+## Publish with GitHub Pages
+
+The repository includes a workflow that builds the fully embedded HTML and deploys it to GitHub Pages automatically.
+
+1. Push the repository to GitHub as `htmlapps-lossless-video-cutter`.
+2. Open **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**.
+3. Push to `main`, or manually run **Deploy standalone app to GitHub Pages** from the Actions tab.
+4. After a successful deployment, the app is available at `https://ttomohisa.github.io/htmlapps-lossless-video-cutter/`.
+
+Each push to `main` rebuilds the standalone HTML from the pinned FFmpeg WASM release, verifies the dependency archive checksum, validates the runtime network boundary, and then publishes `dist/`.
+
+If Pages has not been enabled yet, the workflow still builds and validates the app and writes setup instructions to the Actions summary instead of failing the build.
+
+## Development and build layout
 
 ```text
-build-standalone.bat
+.
+├─ src/index.template.html          # Application template
+├─ dependencies.json                # Pinned FFmpeg WASM Builder release
+├─ app.config.json                  # App metadata and output settings
+├─ build-standalone.bat             # Windows build entry point
+├─ build-standalone.ps1             # Single-HTML builder
+├─ update-ffmpeg.bat                # Pinned FFmpeg WASM update helper
+├─ scripts/
+│  ├─ check-repository.ps1          # Full repository/build validation
+│  ├─ verify-standalone.ps1         # Standalone runtime/network checks
+│  ├─ build-self-extract.ps1        # Self-extracting HTML generator
+│  └─ update-ffmpeg.ps1             # Release update + rollback logic
+├─ dist/
+│  ├─ index.html                    # Generated standalone app
+│  ├─ index.self-extract.html       # Generated self-extracting variant
+│  └─ dependency-manifest.json      # Exact dependency hashes/source links
+└─ .github/workflows/
+   ├─ build-standalone.yml          # Pull request standalone validation
+   ├─ validate.yml                  # Source/build validation
+   └─ deploy-pages.yml              # Automatic Pages deployment from main
 ```
 
-or run:
+The normal build also copies `dist/index.html` to `lossless-video-cutter.html` at the repository root for Browser Kitty and direct-download distribution.
 
-```powershell
-.\build-standalone.ps1
-```
+### Update the FFmpeg WASM core
 
-The build downloads the pinned FFmpeg WASM Builder GitHub Release, verifies its SHA-256 using `SHA256SUMS.txt`, embeds `ffmpeg.js` and `ffmpeg.wasm`, verifies the standalone output, and creates:
+The app currently pins **FFmpeg WASM Builder v1.1.0** and its dedicated `lossless-video-cutter` profile.
 
-```text
-dist/index.html
-dist/index.self-extract.html
-dist/dependency-manifest.json
-lossless-video-cutter.html
-```
+After publishing a compatible Builder release, update with:
 
-The browser does **not** download FFmpeg at runtime. The network is only used by the repository build step.
-
-## Update the FFmpeg WASM core
-
-After publishing a compatible Builder release:
-
-```text
+```bat
 update-ffmpeg.bat 1.2.0
 ```
 
-The script updates the single pinned version in `dependencies.json`, downloads and verifies the new release, rebuilds the app, and restores the old pin if the build fails.
+The update helper changes the single pinned version in `dependencies.json`, downloads the release, verifies SHA-256, rebuilds the app, and restores the previous version if the build fails.
 
-## Repository validation
+To discard the local package cache and fetch the currently pinned release again:
 
 ```powershell
-.\scripts\check-repository.ps1
+.\build-standalone.ps1 -ForceDownload
 ```
 
-The validation checks the runtime network boundary, WORKERFS contract, keyframe reporting, pinned release metadata, standalone build, SHA-256 provenance, and root distribution HTML.
+## Privacy and runtime network protection
+
+The generated standalone HTML includes:
+
+- A Content Security Policy with `connect-src 'none'`
+- No external runtime script, stylesheet, or iframe dependency
+- Embedded `ffmpeg.js` and `ffmpeg.wasm`
+- SHA-256 provenance for the Builder release archive
+- A corresponding-source URL and hash in `dist/dependency-manifest.json`
+- WORKERFS-based access to the selected browser `File` / `Blob`
+
+The GitHub Pages version requires the initial HTML request, but the selected video is not transmitted by the app. For use with the network completely disconnected, open the generated `dist/index.html` locally. See [VERIFY_OFFLINE.md](VERIFY_OFFLINE.md) for the offline verification procedure.
 
 ## Memory behavior
 
-Input and output behave differently:
+Input and output have different memory characteristics:
 
-- **Input:** WORKERFS reads the browser `File`/`Blob` in slices. A 1 GB source does not need to be copied wholesale into MEMFS before FFmpeg starts.
-- **Output:** the current core still writes the result into Emscripten memory before the browser receives it. Cutting 30 seconds from a 1 GB source is therefore much friendlier than copying almost the entire 1 GB source into a new output.
+- **Input:** WORKERFS lets FFmpeg read slices of the selected `File` / `Blob` instead of copying the entire input into MEMFS before processing starts.
+- **Output:** the completed file is currently created in browser/Emscripten memory before it is returned to the page.
 
-## Offline verification
+This makes the tool especially suitable for extracting a relatively short section from a large video. Cutting almost the entire contents of a very large source can still use substantial memory because the output itself must fit in browser memory.
 
-See [VERIFY_OFFLINE.md](VERIFY_OFFLINE.md).
+## Limitations
 
-## Licenses
+- Cutting is stream-copy based, so the actual start can move backward to a decodable keyframe.
+- Arbitrary frame-accurate cutting would require re-encoding around the cut point and is intentionally outside this tool's current design.
+- Browser preview and thumbnail availability depend on the browser's built-in codec/container support.
+- MP4 / M4V / MOV / MKV / WebM are supported by the app profile, but unusual stream/container combinations can still fail to remux.
+- Output is created in browser memory, so very large output ranges can exceed the practical memory limit of the device/browser.
+- Sharing depends on the browser/OS Web Share capability. When sharing is unavailable, the app falls back to saving the file.
 
-The application source in this repository is MIT licensed.
+## Dependencies
 
-The generated standalone HTML embeds the FFmpeg WASM core from the Builder's non-GPL lossless cutter profile. That generated FFmpeg core is distributed under **LGPL-2.1-or-later**. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the corresponding-source URL recorded in each generated `dist/dependency-manifest.json`.
+| Component | Version | License | Purpose |
+| --- | ---: | --- | --- |
+| FFmpeg WASM Builder | 1.1.0 | MIT for Builder/runtime source | Reproducible compact WASM build and browser runtime |
+| Generated FFmpeg core | Builder v1.1.0 `lossless-video-cutter` profile | LGPL-2.1-or-later | Demux, seek, stream copy, and remux |
 
+The generated FFmpeg core intentionally omits x264 and the GPL-only profile used by the separate video compressor. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details and `dist/dependency-manifest.json` for the exact release/source hashes.
 
-### Timeline interaction
+## Contributing
 
-Use the S / E handles for the cut range. Move playback only by actively dragging the narrow white playhead; hover/proximity and timeline-background movement never seek. When the browser can decode the preview, lightweight thumbnails are generated locally for the timeline filmstrip.
+Bug reports and feature proposals are welcome through GitHub Issues.
 
+## License
 
-### Mobile workflow
+Copyright © 2026 ttomohisa
 
-After a cut completes, the save filename can be edited beside the Save action. On phones, the bottom action bar provides Video / Range / Cut / Save controls; Save becomes enabled only after a successful cut. Choosing another video asks for confirmation first.
+The application source in this repository is licensed under the [MIT License](LICENSE).
+
+The generated standalone HTML also embeds the LGPL-2.1-or-later FFmpeg core described above; the MIT license does not relicense that third-party component.
