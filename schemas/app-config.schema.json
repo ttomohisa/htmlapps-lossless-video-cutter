@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "app-config.schema.json",
+  "title": "Single HTML app configuration",
+  "type": "object",
+  "required": [
+    "name",
+    "nameJa",
+    "slug",
+    "version",
+    "description",
+    "descriptionJa",
+    "defaultLanguage",
+    "repository",
+    "build"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nameJa": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "descriptionJa": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "name"
+      ]
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "output",
+        "blockRuntimeNetwork"
+      ],
+      "properties": {
+        "output": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blockRuntimeNetwork": {
+          "type": "boolean"
+        },
+        "selfExtract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "output"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "defaultLanguage": {
+      "enum": [
+        "auto",
+        "ja",
+        "en"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

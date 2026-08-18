@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/dependencies.schema.json",
+  "title": "Pinned GitHub Release assets embedded into the standalone HTML",
+  "type": "object",
+  "required": ["dependencies"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "repository", "version", "releaseAsset", "checksumsAsset", "sourceAsset", "assets"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+          "source": { "const": "github-release" },
+          "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+          "releaseAsset": { "type": "string", "minLength": 1 },
+          "checksumsAsset": { "type": "string", "minLength": 1 },
+          "sourceAsset": { "type": "string", "minLength": 1 },
+          "license": { "type": "string" },
+          "homepage": { "type": "string" },
+          "assets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["key", "path"],
+              "properties": {
+                "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+                "path": { "type": "string", "minLength": 1 },
+                "mime": { "type": "string" },
+                "stripSourceMapComment": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,31 @@
+name: Validate standalone app
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check source network boundary
+        shell: powershell
+        run: .\scripts\check-source.ps1
+      - name: Build standalone HTML
+        shell: powershell
+        run: .\build-standalone.ps1
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: lossless-video-cutter
+          path: |
+            dist/index.html
+            dist/index.self-extract.html
+            dist/dependency-manifest.json
+            dist/self-extract-manifest.json
+            lossless-video-cutter.html
+          if-no-files-found: error
