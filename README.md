@@ -14,7 +14,9 @@ A privacy-focused, single-HTML video cutter that trims supported videos **withou
 
 GitHub Pages delivers the initial HTML. After it loads, video preview, thumbnail generation, range selection, FFmpeg processing, saving, and sharing are handled locally on your device. The video you select is not uploaded by the app.
 
-![Lossless Video Cutter with a selected WebM range on the editing timeline](assets/screenshot.png)
+![Lossless Video Cutter with a selected video range on the editing timeline](assets/screenshot.png)
+
+<p align="center"><img src="assets/screenshot-mobile.png" alt="Lossless Video Cutter on a mobile viewport" width="390"></p>
 
 ## Features
 

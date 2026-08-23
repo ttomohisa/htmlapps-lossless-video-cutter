@@ -14,7 +14,9 @@
 
 GitHub Pagesから最初のHTMLを読み込んだ後、動画プレビュー、サムネイル生成、範囲指定、FFmpeg処理、保存・共有は端末内で行われます。選択した動画をアプリがサーバーへアップロードすることはありません。
 
-![WebMの切り出し範囲をタイムライン上で指定したLossless Video Cutter](assets/screenshot.png)
+![動画の切り出し範囲をタイムライン上で指定したLossless Video Cutter](assets/screenshot.png)
+
+<p align="center"><img src="assets/screenshot-mobile.png" alt="スマートフォン表示のLossless Video Cutter" width="390"></p>
 
 ## 主な機能
 

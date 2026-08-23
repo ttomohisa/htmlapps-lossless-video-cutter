@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Fix rotated 90°/270° portrait-video previews being vertically oversized and clipped inside the fixed preview frame.
+- Keep the cut-result preview constrained correctly for rotated portrait videos.
+- Refresh desktop and mobile screenshots in `assets/`.
 - Confirm before cutting an unchanged full-video range.
 - Add a second mobile Cut button at the bottom of the range editor.
 
