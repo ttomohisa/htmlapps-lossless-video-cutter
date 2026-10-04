@@ -93,6 +93,11 @@ if ($templateText -match 'state\.file\.arrayBuffer\s*\(') { throw "Template must
 if ([string]$ffmpegDependency[0].releaseAsset -notmatch 'lossless-video-cutter') { throw "ffmpeg-wasm-builder releaseAsset must use the lossless-video-cutter profile" }
 if ([string]$ffmpegDependency[0].license -notmatch 'LGPL-2\.1-or-later') { throw "lossless-video-cutter dependency must document LGPL-2.1-or-later" }
 
+$node = Get-Command node -ErrorAction Stop
+$testPath = Join-Path $Root "tests\lossless-video-cutter.test.mjs"
+& $node.Source --test $testPath
+if ($LASTEXITCODE -ne 0) { throw "UI regression tests failed." }
+
 & (Join-Path $Root "scripts\check-source.ps1")
 $buildArguments = @{}
 if ($ForceDownload) { $buildArguments.ForceDownload = $true }
@@ -113,5 +118,14 @@ if ([string]$resolved[0].version -ne [string]$ffmpegDependency[0].version) { thr
 if ([string]$resolved[0].archiveSha256 -notmatch '^[0-9a-f]{64}$') { throw "Generated manifest must record the verified Release archive SHA-256" }
 if ([string]$resolved[0].sourceSha256 -notmatch '^[0-9a-f]{64}$') { throw "Generated manifest must record the corresponding-source SHA-256" }
 if ([string]::IsNullOrWhiteSpace([string]$resolved[0].correspondingSourceUrl)) { throw "Generated manifest must record the corresponding-source URL" }
+
+$previousHtmlPath = $env:LVC_TEST_TEMPLATE
+try {
+  $env:LVC_TEST_TEMPLATE = $distOutput
+  & $node.Source --test $testPath
+  if ($LASTEXITCODE -ne 0) { throw "Generated HTML regression tests failed." }
+} finally {
+  $env:LVC_TEST_TEMPLATE = $previousHtmlPath
+}
 
 Write-Host "[OK] Repository check passed." -ForegroundColor Green

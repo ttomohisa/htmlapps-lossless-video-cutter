@@ -12,12 +12,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
       - name: Check source network boundary
         shell: powershell
         run: .\scripts\check-source.ps1
       - name: Build standalone HTML
         shell: powershell
-        run: .\build-standalone.ps1
+        run: .\scripts\check-repository.ps1
       - name: Upload validation artifact
         uses: actions/upload-artifact@v7
         with:
