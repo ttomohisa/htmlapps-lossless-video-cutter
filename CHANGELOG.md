@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Add focused-playhead I/O shortcuts to mark the start/end without changing existing seek keys.
+- Guard both Use current buttons and shortcuts against missing, stale, or failed preview metadata and invalid current times; preserve existing results for rejected or unchanged ranges.
+- Add Japanese/English shortcut descriptions and distinct accessible labels for current-position controls.
+
 - Keep source, range, and audio controls locked while cutting; cancellation settles its owned Worker request and late callbacks cannot affect retries.
 - Clear running progress after failures and restore editing controls for retry.
 - Validate bounded ranges before changing state: reject sub-10ms selections and preserve a valid result after rejected or unchanged edits.

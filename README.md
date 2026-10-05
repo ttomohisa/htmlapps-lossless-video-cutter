@@ -99,6 +99,10 @@ When the browser can decode the source for preview, the app generates lightweigh
 | `Shift` + `←` / `→` | Move the playhead by 5 seconds |
 | `Home` | Jump to the beginning |
 | `End` | Jump to the end |
+| `I` | Set the range start to the current preview position |
+| `O` | Set the range end to the current preview position |
+
+Tab to the white playhead before using `I` / `O`. Marking works only while idle with usable preview metadata. Modifier keys, held-key repeats, and text composition do not mark the range. Invalid or unchanged selections keep the existing downloadable result. The Use current buttons share the same preview checks; manual time entry and Reset range remain available when browser preview is unsupported.
 
 ## Publish with GitHub Pages
 

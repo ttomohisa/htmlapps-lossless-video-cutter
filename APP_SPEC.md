@@ -48,6 +48,8 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 
 - The S/E handles define the cut range.
 - Seeking is playhead-only: background taps/drags do not move playback.
+- With the playhead focused, unmodified I/O keys set start/end from the current preview position only while idle and preview metadata/time are usable. Repeated and composing key events are ignored.
+- Use current buttons share the same preview guard. Rejected or unchanged ranges preserve the saved output; manual entry and Reset range remain available for unpreviewable sources.
 - A lightweight local thumbnail filmstrip may be generated from the selected source for editor-like context.
 
 
