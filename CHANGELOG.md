@@ -1,5 +1,12 @@
 ## Unreleased
 
+- Keep source, range, and audio controls locked while cutting; cancellation settles its owned Worker request and late callbacks cannot affect retries.
+- Clear running progress after failures and restore editing controls for retry.
+- Validate bounded ranges before changing state: reject sub-10ms selections and preserve a valid result after rejected or unchanged edits.
+- Confirm every source replacement path, including Change, file input, and drop, without losing work when selection is cancelled.
+- Add Japanese/English Reset range to restore the whole source while keeping audio and filename choices.
+- Add deterministic lifecycle, range, replacement, and standalone parity regression tests.
+
 - Fix rotated 90°/270° portrait-video previews being vertically oversized and clipped inside the fixed preview frame.
 - Keep the cut-result preview constrained correctly for rotated portrait videos.
 - Refresh desktop and mobile screenshots in `assets/`.

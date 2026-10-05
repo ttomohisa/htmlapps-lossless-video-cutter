@@ -29,7 +29,9 @@ GitHub Pages delivers the initial HTML. After it loads, video preview, thumbnail
 - Start = 0 and End = video duration are filled automatically when possible
 - Optional audio removal without re-encoding the video
 - Confirmation before cutting the entire unchanged range
-- Confirmation before switching to another video
+- Confirmation before switching to another video, including Change and dropped files
+- Reset range to restore the whole source without changing audio or filename choices
+- Locked source/range/audio controls while cutting, with safe Cancel and immediate retry
 - Save filename editing beside the result Save action
 - Save and Share actions after a successful cut
 - Mobile bottom action bar with Video / Range / Cut / Save
@@ -207,3 +209,7 @@ Copyright © 2026 ttomohisa
 The application source in this repository is licensed under the [MIT License](LICENSE).
 
 The generated standalone HTML also embeds the LGPL-2.1-or-later FFmpeg core described above; the MIT license does not relicense that third-party component.
+
+### Regression checks
+
+Use Node.js 24 or newer and PowerShell to run `./scripts/check-repository.ps1`. The check runs deterministic UI lifecycle/range tests against the template and generated standalone HTML, in addition to the source network boundary, verified FFmpeg build, self-extract verification, and root distribution parity checks. To run only the UI tests: `node --test tests/lossless-video-cutter.test.mjs`. These tests simulate Workers and media metadata; real media and browser checks remain complementary.
