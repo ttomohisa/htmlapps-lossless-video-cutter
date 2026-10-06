@@ -25,7 +25,7 @@ function harness({language = 'en', failure = {}} = {}) {
       Object.assign(this, {id, tagName: tagName.toUpperCase(), value: '', checked: false, disabled: false,
         style: {}, dataset: {}, classList: new Classes(), listeners: {}, attributes: {}, children: [],
         currentTime: 0, duration: NaN, paused: true, ended: false, hidden: false, open: false,
-        textContent: '', src: '', files: [], clickCount: 0, readyState: 0});
+        textContent: '', src: '', files: [], clickCount: 0, readyState: 0, currentSrc: '', error: null});
     }
     addEventListener(type, fn, options = {}) { (this.listeners[type] ??= []).push({fn, once: !!options.once}); }
     removeEventListener(type, fn) { this.listeners[type] = (this.listeners[type] || []).filter(item => item.fn !== fn); }
@@ -41,7 +41,7 @@ function harness({language = 'en', failure = {}} = {}) {
     setAttribute(name, value) { this.attributes[name] = String(value); }
     getAttribute(name) { return this.attributes[name] ?? null; }
     removeAttribute(name) { delete this.attributes[name]; if (name === 'src') this.src = ''; }
-    load() {}
+    load() { this.currentSrc = ''; this.readyState = 0; this.currentTime = 0; this.duration = NaN; this.error = null; }
     pause() { this.paused = true; }
     play() { this.paused = false; return Promise.resolve(); }
     scrollIntoView() {}
@@ -118,9 +118,14 @@ function harness({language = 'en', failure = {}} = {}) {
 function edit(h, id, value, type = 'change') { h.els[id].value = String(value); h.els[id].dispatch(type); }
 function range(h) { return [h.parseTime(h.els.startInput.value), h.parseTime(h.els.endInput.value)]; }
 function ready(options) {
-  const h = harness(options); h.selectFile(fileA); h.setInitialRange(12); h.els.sourcePreview.duration = 12;
+  const h = harness(options); h.selectFile(fileA); previewMetadata(h);
   edit(h, 'startInput', 2); edit(h, 'endInput', 8); return h;
 }
+function previewMetadata(h, duration = 12, event = 'loadedmetadata') {
+  Object.assign(h.els.sourcePreview, {duration, readyState: 1, currentSrc: h.els.sourcePreview.src, error: null});
+  h.els.sourcePreview.dispatch(event);
+}
+function markKey(h, key, properties = {}) { h.els.playhead.focus(); return h.els.playhead.dispatch('keydown', {key, ...properties}); }
 function visible(h, id) { return h.els[id].classList.contains('is-visible'); }
 function begin(h) { const promise = h.cut(); let settled = false; promise.then(() => { settled = true; }, () => { settled = true; }); return {promise, get settled() { return settled; }, worker: h.workers.at(-1)}; }
 async function complete(h) { const job = begin(h); job.worker.emit('done', {data: new Uint8Array([1, 2, 3]).buffer}); await tick(); assert.equal(job.settled, true); assert.equal(visible(h, 'resultCard'), true); return h; }
@@ -578,3 +583,165 @@ for (const action of ['reset', 'validate']) {
     assert.equal(h.els.mobileSaveButton.disabled, false); assert.equal(h.els.resultDuration.textContent, '0:12.000');
   });
 }
+
+// A preview can be missing or have failed even when a manual cut succeeded.
+// Current-position actions must never turn an absent time into zero/to-end.
+for (const [name, disablePreview] of [
+  ['unknown metadata', h => { h.selectFile(fileA); edit(h, 'startInput', 2); edit(h, 'endInput', 8); }],
+  ['known-duration preview error', h => h.els.sourcePreview.dispatch('error')],
+  ['media error before its event', h => { h.els.sourcePreview.error = {code: 3}; }],
+  ['metadata not ready', h => { h.els.sourcePreview.readyState = 0; }],
+  ['missing preview URL', h => { h.els.sourcePreview.src = ''; }],
+  ['stale preview source', h => { h.els.sourcePreview.currentSrc = 'blob:old-source'; }],
+  ['non-finite media duration', h => { h.els.sourcePreview.duration = NaN; }],
+  ['non-finite current time', h => { h.els.sourcePreview.currentTime = NaN; }],
+  ['infinite current time', h => { h.els.sourcePreview.currentTime = Infinity; }],
+  ['negative current time', h => { h.els.sourcePreview.currentTime = -1; }],
+  ['current time outside source', h => { h.els.sourcePreview.currentTime = 13; }],
+]) {
+  for (const id of ['setStartCurrent', 'setEndCurrent']) {
+    test(`${id} is disabled and guarded with ${name}, preserving the saved output`, async () => {
+      const h = ready(); h.els.sourcePreview.currentTime = 4; disablePreview(h); await complete(h);
+      h.els.sourcePreview.dispatch('timeupdate');
+      const before = outputSnapshot(h);
+      assert.equal(h.els[id].disabled, true, 'unusable current position must disable its control');
+      h.els[id].dispatch('click'); assertOutputPreserved(h, before);
+    });
+  }
+}
+test('known-duration preview error immediately disables current-position buttons', async () => {
+  const h = await complete(ready()), before = outputSnapshot(h);
+  assert.equal(h.els.setStartCurrent.disabled, false); assert.equal(h.els.setEndCurrent.disabled, false);
+  h.els.sourcePreview.dispatch('error');
+  assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
+  assertOutputPreserved(h, before);
+});
+test('manual times and Reset range remain usable without a browser preview', async () => {
+  const h = ready(); h.els.sourcePreview.dispatch('error');
+  for (const id of ['startInput', 'endInput', 'resetRangeButton']) assert.equal(h.els[id].disabled, false);
+  edit(h, 'startInput', 3); edit(h, 'endInput', 9); assert.deepEqual(range(h), [3, 9]);
+  await complete(h); const before = outputSnapshot(h); h.els.setStartCurrent.dispatch('click'); assertOutputPreserved(h, before);
+  h.els.resetRangeButton.click(); assert.deepEqual(range(h), [0, 12]);
+  h.selectFile(fileB); h.els.sourcePreview.dispatch('error');
+  edit(h, 'startInput', 1); edit(h, 'endInput', 4); assert.deepEqual(range(h), [1, 4]);
+  h.els.resetRangeButton.click(); assert.deepEqual(range(h), [0, null]);
+});
+test('current-position buttons commit only an accepted changed range', async () => {
+  for (const [id, value, expected] of [['setStartCurrent', 4, [4, 8]], ['setEndCurrent', 6, [2, 6]]]) {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = value;
+    assert.equal(h.els[id].disabled, false); h.els[id].click(); assert.deepEqual(range(h), expected);
+    assert.equal(visible(h, 'resultCard'), false); assert.equal(h.revoked.filter(url => url === before.url).length, 1);
+  }
+});
+for (const event of ['loadedmetadata', 'durationchange']) {
+  for (const outcome of ['done', 'cancel', 'error']) {
+    test(`current-position availability refreshes after deferred ${event} and ${outcome}`, async () => {
+      const h = harness(); h.selectFile(fileA); edit(h, 'startInput', 2); edit(h, 'endInput', 8);
+      const job = begin(h); previewMetadata(h, 12, event); h.els.sourcePreview.currentTime = 4;
+      assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
+      if (outcome === 'cancel') h.cancel();
+      else if (outcome === 'error') job.worker.emit('error', {error: 'Synthetic cut failure'});
+      else job.worker.emit('done', {data: new Uint8Array([1]).buffer});
+      await tick(); assert.equal(h.els.setStartCurrent.disabled, false); assert.equal(h.els.setEndCurrent.disabled, false);
+      h.els.setStartCurrent.click(); assert.deepEqual(range(h), [4, 8]);
+    });
+  }
+}
+test('a deferred preview error keeps current-position buttons disabled until usable metadata returns', async () => {
+  const h = ready(), job = begin(h); h.els.sourcePreview.dispatch('error');
+  job.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick(); const before = outputSnapshot(h);
+  assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
+  h.els.setStartCurrent.dispatch('click'); assertOutputPreserved(h, before);
+  previewMetadata(h); assert.equal(h.els.setStartCurrent.disabled, false); assertOutputPreserved(h, before);
+});
+test('clearing and replacing a source never reuses old preview time', () => {
+  const h = ready(); h.els.sourcePreview.currentTime = 4; h.clearFile();
+  h.els.setStartCurrent.dispatch('click'); h.els.setEndCurrent.dispatch('click'); assert.deepEqual(range(h), [0, null]);
+  h.selectFile(fileB); assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
+  h.els.setStartCurrent.dispatch('click'); h.els.setEndCurrent.dispatch('click'); assert.deepEqual(range(h), [0, null]);
+  previewMetadata(h, 6); assert.equal(h.els.setStartCurrent.disabled, false); assert.equal(h.els.setEndCurrent.disabled, false);
+});
+
+// These operate on the real application key handler, not a replacement helper.
+for (const [key, expected] of [['i', [4, 8]], ['I', [4, 8]], ['o', [2, 4]], ['O', [2, 4]]]) {
+  test(`focused playhead ${key} marks the current position and invalidates only the changed result`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = 4;
+    const event = markKey(h, key); assert.equal(event.defaultPrevented, true); assert.deepEqual(range(h), expected);
+    assert.equal(visible(h, 'resultCard'), false); assert.equal(h.els.mobileSaveButton.disabled, true);
+    assert.equal(h.revoked.filter(url => url === before.url).length, 1);
+    assert.equal(h.els.sourcePreview.currentTime, 4, 'marking does not seek');
+  });
+}
+for (const [name, key, value] of [['unchanged start', 'i', 2], ['unchanged end', 'o', 8],
+  ['start at end', 'i', 8], ['end before start', 'o', 1], ['sub-10ms range', 'o', 2.005]]) {
+  test(`focused marking preserves the existing result for ${name}`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = value;
+    assert.equal(markKey(h, key).defaultPrevented, true); assertOutputPreserved(h, before);
+  });
+}
+for (const properties of [{ctrlKey: true}, {metaKey: true}, {altKey: true}, {shiftKey: true},
+  {repeat: true}, {isComposing: true}, {keyCode: 229}, {defaultPrevented: true}]) {
+  test(`mark keys ignore ${JSON.stringify(properties)}`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = 4;
+    for (const key of ['i', 'o']) {
+      const event = markKey(h, key, properties); assertOutputPreserved(h, before);
+      assert.equal(event.defaultPrevented, !!properties.defaultPrevented);
+    }
+  });
+}
+for (const id of ['startInput', 'endInput', 'outputFilename', 'removeAudio', 'startRange', 'endRange', 'helpButton']) {
+  test(`typing I/O in ${id} never marks the range`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = 4; h.els[id].focus();
+    for (const key of ['i', 'o']) {
+      assert.equal(h.els[id].dispatch('keydown', {key}).defaultPrevented, false);
+      assert.equal(h.els.playhead.dispatch('keydown', {key}).defaultPrevented, false, 'unfocused playhead ignores direct dispatch');
+      assertOutputPreserved(h, before);
+    }
+  });
+}
+for (const dialog of ['helpDialog', 'newVideoDialog', 'fullRangeDialog']) {
+  test(`mark keys ignore ${dialog} while it is open`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = 4; h.els[dialog].showModal();
+    for (const key of ['i', 'o']) { assert.equal(markKey(h, key).defaultPrevented, false); assertOutputPreserved(h, before); }
+  });
+}
+for (const [name, mutate] of [['preview error', h => h.els.sourcePreview.dispatch('error')],
+  ['non-finite time', h => { h.els.sourcePreview.currentTime = NaN; }],
+  ['unready metadata', h => { h.els.sourcePreview.readyState = 0; }],
+  ['wrong event target', h => {}]]) {
+  test(`mark keys ignore ${name} and preserve the output`, async () => {
+    const h = await complete(ready()), before = outputSnapshot(h); h.els.sourcePreview.currentTime = 4; mutate(h);
+    for (const key of ['i', 'o']) {
+      const properties = name === 'wrong event target' ? {target: h.els.startInput} : {};
+      assert.equal(markKey(h, key, properties).defaultPrevented, false); assertOutputPreserved(h, before);
+    }
+  });
+}
+test('mark keys stay locked during a cut and work again after Cancel', async () => {
+  const h = ready(), job = begin(h); h.els.sourcePreview.currentTime = 4;
+  for (const key of ['i', 'o']) { assert.equal(markKey(h, key).defaultPrevented, false); assert.deepEqual(range(h), [2, 8]); }
+  assert.equal(job.worker.terminated, false); h.cancel(); await tick();
+  assert.equal(markKey(h, 'i').defaultPrevented, true); assert.deepEqual(range(h), [4, 8]);
+});
+for (const language of ['en', 'ja']) {
+  test(`${language} exposes focused-playhead marking instructions and distinct current-position labels`, () => {
+    const h = ready({language});
+    assert.ok(h.els.timelineScrubHint, 'the playhead needs a linked shortcut description');
+    assert.match(h.els.timelineScrubHint.textContent, /I.*O/);
+    assert.match(h.els.timelineScrubHint.textContent, language === 'en' ? /focus/i : /フォーカス/);
+    assert.match(html, /id="playhead"[^>]*aria-keyshortcuts="I O"/);
+    assert.match(html, /id="playhead"[^>]*aria-describedby="timelineScrubHint"/);
+    const start = h.els.setStartCurrent.getAttribute('aria-label'), end = h.els.setEndCurrent.getAttribute('aria-label');
+    assert.ok(start.includes(h.els.setStartCurrent.textContent), 'start label includes its visible button text');
+    assert.ok(end.includes(h.els.setEndCurrent.textContent), 'end label includes its visible button text');
+    assert.match(start, language === 'en' ? /start/i : /開始/); assert.match(end, language === 'en' ? /end/i : /終了/);
+  });
+}
+
+test('an unusable loadedmetadata event immediately disables current-position controls', async () => {
+  const h = await complete(ready()), before = outputSnapshot(h);
+  h.els.sourcePreview.duration = NaN; h.els.sourcePreview.readyState = 0;
+  h.els.sourcePreview.dispatch('loadedmetadata');
+  assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
+  h.els.setStartCurrent.dispatch('click'); h.els.setEndCurrent.dispatch('click'); assertOutputPreserved(h, before);
+});
