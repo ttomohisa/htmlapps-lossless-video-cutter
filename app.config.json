@@ -3,7 +3,7 @@
   "name": "Lossless Video Cutter",
   "nameJa": "Lossless Video Cutter",
   "slug": "lossless-video-cutter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cut MP4, MOV, MKV, and WebM video locally without re-encoding. The pinned FFmpeg 9 WebAssembly core uses stream copy and WORKERFS for large inputs.",
   "descriptionJa": "MP4・MOV・MKV・WebMを再エンコードせずブラウザ内だけで切り出します。FFmpeg 9 WebAssemblyのストリームコピーとWORKERFSで大きな入力にも対応します。",
   "defaultLanguage": "auto",

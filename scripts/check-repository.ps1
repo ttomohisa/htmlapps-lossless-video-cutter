@@ -128,4 +128,7 @@ try {
   $env:LVC_TEST_TEMPLATE = $previousHtmlPath
 }
 
+
+& node (Join-Path $Root "tests\header-normalization.test.mjs")
+if ($LASTEXITCODE -ne 0) { throw "Header normalization regression failed." }
 Write-Host "[OK] Repository check passed." -ForegroundColor Green
