@@ -60,3 +60,8 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 - Replacing the source resets the S/E handles, playhead, filmstrip, and keyframe marker before metadata for the new source is applied.
 - On phones, use a fixed bottom action bar modeled on Browser Kitty's Document Scanner: Video / Range / Cut / Save. Save stays disabled until a cut succeeds.
 - Save, Share, and source-change actions use icons as well as text where space allows.
+
+## Header normalization (1.0.1)
+
+- The language button shows EN in Japanese and JA in English. Its title and accessible name describe the destination in the current UI language.
+- Help retains its localized title and accessible name; the header version is v1.0.1.
