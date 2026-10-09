@@ -1,3 +1,7 @@
+## 1.0.3 - 2026-10-09
+
+- Prepare the maintenance build for an English catalog screenshot, preserving app behavior and the supplied icon.
+
 ## 1.0.1 - 2026-10-07
 
 - Normalize the header language switch to EN / JA with localized destination tooltips and accessible names.
