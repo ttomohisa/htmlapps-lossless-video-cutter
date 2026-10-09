@@ -1,3 +1,7 @@
+## 1.0.3 - 2026-10-09
+
+- Add an English catalog screenshot captured from the app with a synthetic video and reference it from the English README. Preserve app behavior and the supplied icon.
+
 ## 1.0.1 - 2026-10-07
 
 - Normalize the header language switch to EN / JA with localized destination tooltips and accessible names.
