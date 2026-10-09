@@ -131,4 +131,6 @@ try {
 
 & node (Join-Path $Root "tests\header-normalization.test.mjs")
 if ($LASTEXITCODE -ne 0) { throw "Header normalization regression failed." }
+& node (Join-Path $Root "tests\app-icon.test.mjs")
+if ($LASTEXITCODE -ne 0) { throw "App icon regression failed." }
 Write-Host "[OK] Repository check passed." -ForegroundColor Green
