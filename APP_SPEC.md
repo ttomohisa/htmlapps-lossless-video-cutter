@@ -65,3 +65,8 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 
 - The language button shows EN in Japanese and JA in English. Its title and accessible name describe the destination in the current UI language.
 - Help retains its localized title and accessible name; the header version is v1.0.1.
+
+## Icon refresh (1.0.2)
+
+- The header and embedded favicon use the supplied artwork from `assets/favicon.svg`, preserving its original `0 0 64 64` viewBox.
+- The header keeps its existing responsive icon slot; readable and self-extract releases inherit the same embedded favicon.

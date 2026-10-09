@@ -3,6 +3,10 @@
 - Normalize the header language switch to EN / JA with localized destination tooltips and accessible names.
 - Keep Help labels localized and synchronize the three-part app version without changing local-processing behavior.
 
+## 1.0.2 - 2026-10-09
+
+- Refresh the app header and embedded favicon with the supplied artwork; keep the SVG asset and generated standalone releases synchronized.
+
 ## Unreleased
 
 - Add focused-playhead I/O shortcuts to mark the start/end without changing existing seek keys.
