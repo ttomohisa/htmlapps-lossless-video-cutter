@@ -1,6 +1,6 @@
 ## 1.0.3 - 2026-10-09
 
-- Prepare the maintenance build for an English catalog screenshot, preserving app behavior and the supplied icon.
+- Add an English catalog screenshot captured from the app with a synthetic video and reference it from the English README. Preserve app behavior and the supplied icon.
 
 ## 1.0.1 - 2026-10-07
 
