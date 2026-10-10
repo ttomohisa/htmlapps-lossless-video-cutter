@@ -133,4 +133,9 @@ try {
 if ($LASTEXITCODE -ne 0) { throw "Header normalization regression failed." }
 & node (Join-Path $Root "tests\app-icon.test.mjs")
 if ($LASTEXITCODE -ne 0) { throw "App icon regression failed." }
+foreach ($target in @("src\index.template.html", "lossless-video-cutter.html", "dist\index.html", "dist\index.self-extract.html")) {
+  & $node.Source (Join-Path $Root "tests\dialog-layout.test.mjs") (Join-Path $Root $target)
+  if ($LASTEXITCODE -ne 0) { throw "Dialog layout regression failed for $target" }
+}
+
 Write-Host "[OK] Repository check passed." -ForegroundColor Green

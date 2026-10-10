@@ -70,3 +70,9 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 
 - The header and embedded favicon use the supplied artwork from `assets/favicon.svg`, preserving its original `0 0 64 64` viewBox.
 - The header keeps its existing responsive icon slot; readable and self-extract releases inherit the same embedded favicon.
+
+## Modal page scrolling (1.0.4)
+
+- Opening Help, source-replacement confirmation, or full-range confirmation locks background page scrolling until the last native modal closes.
+- Preserve the bounded Help dialog, sticky close header, native focus management and existing confirmation actions.
+- The local-processing badge uses the shared decorative shield; app artwork and truthful offline behavior remain unchanged.
