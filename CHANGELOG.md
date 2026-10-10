@@ -1,3 +1,9 @@
+## 1.0.4 - 2026-10-10
+
+- Keep the background page stationary while Help or either native confirmation dialog is open; scrolling resumes automatically when the last modal closes.
+- Use the shared decorative shield for the local-processing badge while preserving the app artwork.
+- Add modal scroll-lock and badge regression checks across source and both standalone variants.
+
 ## 1.0.3 - 2026-10-09
 
 - Add an English catalog screenshot captured from the app with a synthetic video and reference it from the English README. Preserve app behavior and the supplied icon.
