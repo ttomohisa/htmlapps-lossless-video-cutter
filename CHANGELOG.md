@@ -1,5 +1,9 @@
 ## 1.0.4 - 2026-10-10
 
+## Unreleased
+
+- Clarify Japanese and English help by removing internal layout, implementation, and audit commentary while preserving usage guidance and cautions.
+
 - Keep the background page stationary while Help or either native confirmation dialog is open; scrolling resumes automatically when the last modal closes.
 - Use the shared decorative shield for the local-processing badge while preserving the app artwork.
 - Add modal scroll-lock and badge regression checks across source and both standalone variants.
