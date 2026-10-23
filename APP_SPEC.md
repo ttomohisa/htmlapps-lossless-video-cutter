@@ -76,3 +76,7 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 - Opening Help, source-replacement confirmation, or full-range confirmation locks background page scrolling until the last native modal closes.
 - Preserve the bounded Help dialog, sticky close header, native focus management and existing confirmation actions.
 - The local-processing badge uses the shared decorative shield; app artwork and truthful offline behavior remain unchanged.
+
+## Shared local-processing wording
+
+The Japanese label 完全ローカル処理 uses the English text Fully local processing. Preserve the existing responsive visibility, functional bottom controls, and Help behavior. Detailed privacy/network explanations are unchanged.
