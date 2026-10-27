@@ -1,5 +1,9 @@
 ## 1.0.4 - 2026-10-10
 
+## 1.0.5 - 2026-10-27
+
+- Restore the round bottom dot in the Help question-mark icon without changing layout or controls.
+
 ## Unreleased
 
 - Clarify Japanese and English help by removing internal layout, implementation, and audit commentary while preserving usage guidance and cautions.

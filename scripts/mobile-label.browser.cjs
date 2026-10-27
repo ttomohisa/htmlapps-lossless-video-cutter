@@ -7,7 +7,7 @@ const cfg={"language": "#languageButton", "help": "#helpButton", "modal": "#help
 const evidence=path.resolve('test-results/mobile-label');
 async function main(){
  fs.mkdirSync(evidence,{recursive:true});const browser=await chromium.launch();
- try{for(const language of ['ja','en'])for(const [width,height]of [[1360,900],[320,568],[393,252]]){
+ try{for(const language of ['ja','en'])for(const [width,height]of [[1360,900],[320,568],[360,640],[390,844],[393,252]]){
  const context=await browser.newContext({viewport:{width,height},locale:language,reducedMotion:'reduce'});
  // Exercise the app's real no-camera fallback without requesting device access.
  if(cfg.noCamera)await context.addInitScript(()=>Object.defineProperty(navigator,'mediaDevices',{value:undefined}));
@@ -18,6 +18,11 @@ async function main(){
  const langButton=width<=760&&cfg.phoneLanguage?cfg.phoneLanguage:cfg.language;
  await page.locator(langButton).waitFor();
  if(await page.locator('html').getAttribute('lang')!==language)await page.locator(langButton).click();
+ assert.equal(await page.locator('#helpButton svg path').last().evaluate(el=>getComputedStyle(el).strokeLinecap),'round',label+': Help dot has round caps');
+ const headerVersion=page.locator('#versionBadge');
+ assert.equal((await headerVersion.textContent()).trim(),'v'+require('../app.config.json').version,label+': current header version');
+ assert.equal(await headerVersion.isVisible(),true,label+': header version visible');
+ assert.ok(await headerVersion.evaluate(el=>{const r=el.getBoundingClientRect();if(r.left<0||r.right>innerWidth||r.top<0||r.bottom>innerHeight||el.scrollWidth>el.clientWidth+1)return false;for(let p=el.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),b=p.getBoundingClientRect();if(/hidden|clip/.test(s.overflowX)&&(r.left<b.left-1||r.right>b.right+1))return false;if(/hidden|clip/.test(s.overflowY)&&(r.top<b.top-1||r.bottom>b.bottom+1))return false;}return true;}),label+': version is not clipped');
  const badge=page.locator(cfg.badge);
  assert.equal((await badge.textContent()).trim(),language==='ja'?'完全ローカル処理':'Fully local processing');
  assert.equal(await badge.isVisible(),width>cfg.hide,label+': existing badge visibility');
