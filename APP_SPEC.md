@@ -80,3 +80,7 @@ The application source is MIT. The generated standalone HTML includes an FFmpeg 
 ## Shared local-processing wording
 
 The Japanese label 完全ローカル処理 uses the English text Fully local processing. Preserve the existing responsive visibility, functional bottom controls, and Help behavior. Detailed privacy/network explanations are unchanged.
+
+## Header visibility
+
+Restore the round bottom dot in the Help question-mark icon without changing layout or controls. Verify Japanese and English at 320px, 360px, 390px and desktop widths.
