@@ -146,12 +146,12 @@ The normal build also copies `dist/index.html` to `lossless-video-cutter.html` a
 
 ### Update the FFmpeg WASM core
 
-The app currently pins **FFmpeg WASM Builder v1.1.0** and its dedicated `lossless-video-cutter` profile.
+The app currently pins **FFmpeg WASM Builder v1.10.8** and its dedicated `lossless-video-cutter` profile.
 
 After publishing a compatible Builder release, update with:
 
 ```bat
-update-ffmpeg.bat 1.2.0
+update-ffmpeg.bat 1.10.8
 ```
 
 The update helper changes the single pinned version in `dependencies.json`, downloads the release, verifies SHA-256, rebuilds the app, and restores the previous version if the build fails.
@@ -197,8 +197,8 @@ This makes the tool especially suitable for extracting a relatively short sectio
 
 | Component | Version | License | Purpose |
 | --- | ---: | --- | --- |
-| FFmpeg WASM Builder | 1.1.0 | MIT for Builder/runtime source | Reproducible compact WASM build and browser runtime |
-| Generated FFmpeg core | Builder v1.1.0 `lossless-video-cutter` profile | LGPL-2.1-or-later | Demux, seek, stream copy, and remux |
+| FFmpeg WASM Builder | 1.10.8 | MIT for Builder/runtime source | Reproducible compact WASM build and browser runtime |
+| Generated FFmpeg core | Builder v1.10.8 `lossless-video-cutter` profile | LGPL-2.1-or-later | Demux, seek, stream copy, and remux |
 
 The generated FFmpeg core intentionally omits x264 and the GPL-only profile used by the separate video compressor. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details and `dist/dependency-manifest.json` for the exact release/source hashes.
 
@@ -218,8 +218,8 @@ The generated standalone HTML also embeds the LGPL-2.1-or-later FFmpeg core desc
 
 Use Node.js 24 or newer and PowerShell to run `./scripts/check-repository.ps1`. The check runs deterministic UI lifecycle/range tests against the template and generated standalone HTML, in addition to the source network boundary, verified FFmpeg build, self-extract verification, and root distribution parity checks. To run only the UI tests: `node --test tests/lossless-video-cutter.test.mjs`. These tests simulate Workers and media metadata; real media and browser checks remain complementary.
 
-## Current output limits (bundled Builder v1.1.0)
+## Current output limits (bundled Builder v1.10.8)
 
 The saved-video duration is read from the resulting media when your browser supports its container/codec; otherwise, the UI shows an approximate duration derived from the requested end and actual keyframe-aligned start. This estimate is not a promise of frame-accurate cutting.
 
-The currently embedded runtime copies one selected video track and one selected audio track, and drops subtitles and other tracks. A separate upstream Builder fix is being prepared; this limitation remains until a tested release is pinned and bundled in this app. For large outputs, browser memory can still be exhausted even though the input is read in slices.
+The Builder v1.10.8 runtime copies one selected video track, every audio track (unless **Remove audio** is enabled), and subtitle tracks supported by the destination container. Unsupported subtitle codecs may be omitted, and an incompatible audio/container combination can cause the cut to fail. Other video, chapter, attachment, and data streams are not preserved. End points are presentation-time targets, not always exact saved boundaries: B-frame reference pictures can extend the saved tail slightly. Large outputs can still exhaust browser memory despite slice-backed input.
