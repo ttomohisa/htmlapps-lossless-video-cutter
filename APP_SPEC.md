@@ -15,7 +15,7 @@ The app intentionally keeps the source container instead of acting as a general 
 
 ## Core behavior
 
-The app embeds the `lossless-video-cutter` profile from `ttomohisa/htmlapps-ffmpeg-wasm-builder` v1.1.0. The runner uses FFmpeg/libavformat stream copy. It does not decode, encode, scale, resample, or filter media.
+The app embeds the `lossless-video-cutter` profile from `ttomohisa/htmlapps-ffmpeg-wasm-builder` v1.10.8. The runner uses FFmpeg/libavformat stream copy. It does not decode, encode, scale, resample, or filter media.
 
 The selected browser `File` is mounted read-only through Emscripten WORKERFS. This avoids first copying the whole input into MEMFS. The output is still written to MEMFS, so very large output ranges can still require substantial browser memory.
 
@@ -89,4 +89,4 @@ Restore the round bottom dot in the Help question-mark icon without changing lay
 
 - The result's saved duration is sourced from the completed file's browser media metadata when available. Before or without usable metadata, any duration is marked as approximate and uses the **actual** (keyframe-aligned) start.
 - Avoid redundant copies when transferring the newly decoded WASM bytes and a whole MEMFS readFile output ArrayBuffer. This reduces peak usage but does not make the output streamable.
-- The bundled Builder v1.1.0 still has the end-of-cut B-frame/audio and multi-track restrictions until a corrected upstream Builder release is available. Do not claim those upstream defects are fixed in an app-only patch.
+- The app pins released Builder v1.10.8 and embeds its verified no-reencode runner. Its browser smoke covers reordered B frames, trailing AAC packets, two audio tracks, a compatible mov_text subtitle and full audio removal. Other video tracks, chapters, attachments and data streams are not preserved; unsupported container/codec combinations may fail.
