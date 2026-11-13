@@ -1,10 +1,10 @@
-## 1.0.6 - Unreleased (awaiting upstream WASM fix)
+## 1.0.6 - Unreleased
 
 - Display the saved video's duration from its metadata when playable; use an explicitly approximate estimate otherwise, including the adjusted keyframe start.
 - Transfer the existing WASM and complete MEMFS output buffers without unnecessary ArrayBuffer copies.
-- Clarify the presently pinned Builder v1.1.0 track limits in Japanese and English Help.
+- Pin and embed FFmpeg WASM Builder v1.10.8 with verified release SHA-256, preserving compatible multiple audio tracks and subtitles.
 - Add duration and transfer regression tests.
-- **Pending**: integrate a released, browser-verified FFmpeg WASM Builder fix for reordered B frames, trailing audio, and multiple supported tracks before shipping the complete cutter fix.
+- Fix trailing B-frame reference and AAC packet loss at the requested end through the v1.10.8 stream-copy runner. The actual end can be slightly later when reference frames are required.
 
 ## 1.0.4 - 2026-10-10
 
