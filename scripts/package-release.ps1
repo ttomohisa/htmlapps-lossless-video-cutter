@@ -124,5 +124,5 @@ foreach ($line in $shaLines) {
   }
 }
 
-Write-Host "[OK] Packaged $Version: standalone HTML, self-extracting HTML, ZIP and SHA256SUMS.txt" -ForegroundColor Green
+Write-Host "[OK] Packaged $($Version): standalone HTML, self-extracting HTML, ZIP and SHA256SUMS.txt" -ForegroundColor Green
 Write-Host "[OK] ZIP includes bilingual documentation, licenses and FFmpeg source provenance." -ForegroundColor Green
