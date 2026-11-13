@@ -30,6 +30,14 @@ async function main(){
   const style=getComputedStyle(el),pseudo=getComputedStyle(el,'::before');
   return style.backgroundImage==='none'&&(pseudo.content==='none'||pseudo.content==='normal')&&style.backgroundColor!=='rgba(0, 0, 0, 0)';
  }),label+': drop area has a flat background without overlay');
+ assert.ok(await page.locator('#fileInput').evaluate(el=>{
+  const zone=el.closest('#dropZone'),singleTabStop=zone.tabIndex===-1&&el.tabIndex===0;
+  el.focus();
+  const focused=document.activeElement===el;
+  const ring=getComputedStyle(zone).outlineStyle==='solid';
+  el.blur();
+  return singleTabStop&&focused&&ring;
+ }),label+': keyboard file picker has one visible focus target');
  const headerVersion=page.locator('#versionBadge');
  assert.equal((await headerVersion.textContent()).trim(),'v'+require('../app.config.json').version,label+': current header version');
  assert.equal(await headerVersion.isVisible(),true,label+': header version visible');
