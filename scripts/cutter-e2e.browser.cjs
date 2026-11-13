@@ -36,7 +36,7 @@ async function runCase(browser, language, width, height) {
     // cut to exercise file selection, WORKERFS, true WASM execution and export.
     await page.locator('#endInput').fill('0:01.200');
     await page.locator('#endInput').press('Tab');
-    await page.locator('#cutButton').click();
+    await page.locator(width <= 640 ? '#mobileInlineCutButton' : '#cutButton').click();
     if (await page.locator('#fullRangeDialog').isVisible())
       await page.locator('#fullRangeConfirm').click();
     await page.locator('#resultCard.is-visible').waitFor({timeout: 100000});
