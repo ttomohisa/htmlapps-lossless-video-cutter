@@ -227,7 +227,7 @@ for (const [name, mutate] of [
     assert.equal(h.els.summaryDuration.textContent, '0:06.000');
     assert.deepEqual(Array.from(job.worker.payload.args), ['--input', '/workerfs/input.mp4', '--output', '/output.mp4', '--start', '2', '--end', '8']);
     job.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick();
-    assert.equal(h.els.resultDuration.textContent, '0:06.000'); assert.equal(h.els.requestedStartResult.textContent, '0:02.000');
+    assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000'); assert.equal(h.els.requestedStartResult.textContent, '0:02.000');
   });
 }
 for (const event of ['loadedmetadata', 'durationchange', 'error']) {
@@ -236,7 +236,7 @@ for (const event of ['loadedmetadata', 'durationchange', 'error']) {
     const job = begin(h); h.els.sourcePreview.duration = 6; h.els.sourcePreview.dispatch(event);
     assert.deepEqual(range(h), [2, 8]); assert.equal(h.els.summaryDuration.textContent, '0:06.000');
     job.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick();
-    assert.equal(h.els.resultDuration.textContent, '0:06.000'); assert.equal(h.els.requestedStartResult.textContent, '0:02.000');
+    assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000'); assert.equal(h.els.requestedStartResult.textContent, '0:02.000');
   });
 }
 
@@ -385,7 +385,7 @@ test('Reset range is a no-op for a result already covering the whole source', as
 test('Reset range handler cannot change an active cut', async () => {
   const h = ready(), job = begin(h); assert.ok(h.els.resetRangeButton); h.els.resetRangeButton.dispatch('click');
   assert.deepEqual(range(h), [2, 8]); job.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick();
-  assert.equal(h.els.resultDuration.textContent, '0:06.000');
+  assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000');
 });
 for (const [name, values] of [
   ['negative start', ['-1', '8']], ['end before start', ['2', '1']], ['start at duration', ['12', '99']],
@@ -518,7 +518,7 @@ for (const mediaEvent of ['loadedmetadata', 'durationchange']) {
       assert.equal(h.els.endRange.disabled, false, 'known-duration end slider unlocks');
       assert.equal(h.els.summaryDuration.textContent, '0:06.000');
       if (outcome === 'done') {
-        assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '0:06.000');
+        assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000');
         assert.equal(h.els.requestedStartResult.textContent, '0:02.000');
       }
     });
@@ -528,7 +528,7 @@ test('preview error after a manual-duration cut preserves the committed end and 
   const h = harness(); h.selectFile(fileA); edit(h, 'startInput', 2); edit(h, 'endInput', 8); await complete(h);
   const before = outputSnapshot(h); h.els.sourcePreview.dispatch('error');
   assertOutputPreserved(h, before); assert.equal(h.els.previewShell.classList.contains('is-unavailable'), true);
-  assert.equal(h.els.summaryDuration.textContent, '0:06.000'); assert.equal(h.els.resultDuration.textContent, '0:06.000');
+  assert.equal(h.els.summaryDuration.textContent, '0:06.000'); assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000');
 });
 for (const outcome of ['done', 'cancel', 'error']) {
   test(`deferred preview error is reflected after ${outcome} without erasing the manual end`, async () => {
@@ -542,7 +542,7 @@ for (const outcome of ['done', 'cancel', 'error']) {
     assert.equal(h.els.previewShell.classList.contains('is-unavailable'), true, 'deferred preview error is applied on exit');
     assert.deepEqual(range(h), [2, 8]); assert.equal(h.els.summaryDuration.textContent, '0:06.000');
     if (outcome === 'done') {
-      assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '0:06.000');
+      assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000');
       assert.equal(h.els.mobileSaveButton.disabled, false);
     }
   });
@@ -558,14 +558,14 @@ test('old deferred media facts cannot overwrite a new source during synchronous 
   assert.equal(h.els.fileName.textContent, fileB.name); assert.equal(h.els.fileDuration.textContent, '0:06.000');
   assert.deepEqual(range(h), [1, 4]); assert.equal(h.els.previewShell.classList.contains('is-unavailable'), false);
   next.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick();
-  assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '0:03.000');
+  assert.equal(visible(h, 'resultCard'), true); assert.equal(h.els.resultDuration.textContent, '≈ 0:03.000');
 });
 
 test('deferred duration resolves a to-end result without rewriting its requested range', async () => {
   const h = harness(); h.selectFile(fileA); edit(h, 'startInput', 2);
   const job = begin(h); h.els.sourcePreview.duration = 12; h.els.sourcePreview.dispatch('loadedmetadata');
   job.worker.emit('done', {data: new Uint8Array([1]).buffer}); await tick();
-  assert.deepEqual(range(h), [2, null]); assert.equal(h.els.resultDuration.textContent, '0:10.000');
+  assert.deepEqual(range(h), [2, null]); assert.equal(h.els.resultDuration.textContent, '≈ 0:10.000');
   assert.equal(h.els.endRange.value, '12'); assert.equal(h.els.timelineSelected.style.width, `${100 - 2 / 12 * 100}%`);
   assert.equal(h.els.mobileSaveButton.disabled, false);
 });
@@ -580,7 +580,7 @@ for (const action of ['reset', 'validate']) {
     if (action === 'reset') h.els.resetRangeButton.dispatch('click'); else assert.ok(h.validateRange());
     assert.equal(visible(h, 'resultCard'), true, 'equivalent effective range keeps the completed result');
     assert.equal(h.els.resultPreview.src, outputUrl); assert.equal(h.revoked.includes(outputUrl), false);
-    assert.equal(h.els.mobileSaveButton.disabled, false); assert.equal(h.els.resultDuration.textContent, '0:12.000');
+    assert.equal(h.els.mobileSaveButton.disabled, false); assert.equal(h.els.resultDuration.textContent, '≈ 0:12.000');
   });
 }
 
@@ -744,4 +744,31 @@ test('an unusable loadedmetadata event immediately disables current-position con
   h.els.sourcePreview.dispatch('loadedmetadata');
   assert.equal(h.els.setStartCurrent.disabled, true); assert.equal(h.els.setEndCurrent.disabled, true);
   h.els.setStartCurrent.dispatch('click'); h.els.setEndCurrent.dispatch('click'); assertOutputPreserved(h, before);
+});
+
+test('output duration remains approximate until saved-file metadata is available', async () => {
+  const h = await complete(ready());
+  assert.equal(h.els.resultDuration.textContent, '≈ 0:06.000');
+  const url = h.els.resultPreview.src;
+  Object.assign(h.els.resultPreview, {currentSrc: url, duration: 6.12});
+  h.els.resultPreview.dispatch('loadedmetadata');
+  assert.equal(h.els.resultDuration.textContent, '0:06.120');
+  h.els.resultPreview.currentSrc = 'blob:obsolete';
+  h.els.resultPreview.duration = 99;
+  h.els.resultPreview.dispatch('loadedmetadata');
+  assert.equal(h.els.resultDuration.textContent, '0:06.120', 'stale metadata cannot overwrite the result');
+});
+
+test('keyframe-shifted output duration is estimated from actual rather than requested start', async () => {
+  const h = ready(); const job = begin(h);
+  job.worker.emit('log', {message: 'lossless-cut: requested-start=2 actual-start=1 keyframe-aligned=yes'});
+  job.worker.emit('done', {data: new Uint8Array([1, 2]).buffer}); await tick();
+  assert.equal(h.els.resultDuration.textContent, '≈ 0:07.000');
+  assert.equal(h.els.summaryDuration.textContent, '0:06.000', 'selected range remains unchanged');
+});
+
+test('worker uses a directly transferable readFile buffer and decodes WASM only once', () => {
+  assert.match(html, /bytes\.byteOffset===0&&bytes\.byteLength===bytes\.buffer\.byteLength\?bytes\.buffer/);
+  assert.match(html, /wasmBuffer=wasm\.buffer,id=1/);
+  assert.doesNotMatch(html, /copy=bytes\.buffer\.slice/);
 });
