@@ -442,11 +442,15 @@ test('a drop cannot spend confirmation intended for an approved native picker', 
   h.els.dropZone.dispatch('drop', {dataTransfer: {files: [fileB]}});
   assert.equal(h.els.newVideoDialog.open, true); assertOutputPreserved(h, before);
 });
-test('replacement chooser keyboard activation confirms before opening', async () => {
+test('hidden drop zone does not intercept keyboard; Change still confirms replacement', async () => {
   for (const key of ['Enter', ' ']) {
     const h = await complete(ready()), before = outputSnapshot(h);
     const event = h.els.dropZone.dispatch('keydown', {key}); h.runChooserTimers();
-    assert.equal(event.defaultPrevented, true); assert.equal(h.els.newVideoDialog.open, true);
+    assert.equal(event.defaultPrevented, false);
+    assert.equal(h.els.newVideoDialog.open, false);
+    assert.equal(h.els.fileInput.clickCount, 0); assertOutputPreserved(h, before);
+    h.els.changeFileButton.click(); h.runChooserTimers();
+    assert.equal(h.els.newVideoDialog.open, true);
     assert.equal(h.els.fileInput.clickCount, 0); assertOutputPreserved(h, before);
   }
 });
