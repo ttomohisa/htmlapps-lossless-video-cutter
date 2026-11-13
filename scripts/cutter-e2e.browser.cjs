@@ -107,7 +107,7 @@ async function runErrorRecovery(browser) {
     await page.locator('#cutButton').click();
     await page.waitForFunction(() =>
       !document.body.classList.contains('is-processing') &&
-      !!document.querySelector('.toast.error'), {timeout: 45000});
+      !!document.querySelector('.toast.error'), undefined, {timeout: 45000});
     assert.equal(await page.locator('#resultCard.is-visible').count(), 0);
     assert.equal(await page.locator('#cutButton').isEnabled(), true,
       'cut control remains usable after a failed export');
