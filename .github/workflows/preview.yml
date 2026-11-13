@@ -52,6 +52,8 @@ jobs:
         New-Item -ItemType Directory -Force -Path test-results/mobile-label | Out-Null
         node scripts/mobile-label.browser.cjs 2>&1 | Tee-Object -FilePath test-results/mobile-label/results.log
         if ($LASTEXITCODE -ne 0) { throw "Mobile label browser regression failed." }
+        node scripts/cutter-e2e.browser.cjs 2>&1 | Tee-Object -FilePath test-results/mobile-label/cutter-e2e.log
+        if ($LASTEXITCODE -ne 0) { throw "Embedded FFmpeg cutter browser regression failed." }
     - name: Upload mobile label browser evidence
       if: always()
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
