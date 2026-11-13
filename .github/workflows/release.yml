@@ -1,0 +1,151 @@
+name: Publish versioned GitHub Release
+
+# A merge to main publishes the app version from app.config.json once.
+# An existing version tag/release is never overwritten. workflow_dispatch can
+# recover a failed publication (for example, a tag created before an upload failed).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lossless-video-cutter-github-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - id: version
+        name: Resolve exact SemVer and check for an existing Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./app.config.json').version")"
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "app.config.json must contain a stable three-part SemVer" >&2
+            exit 1
+          fi
+          tag="v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Release $tag already exists; no tag or release will be changed."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "Release $tag is missing; package and publish the current commit."
+          fi
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run the full app and standalone verification
+        shell: pwsh
+        run: ./scripts/check-repository.ps1
+      - name: Package verified standalone and self-extracting HTML
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: ./scripts/package-release.ps1 -Version $env:RELEASE_VERSION
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lossless-video-cutter-release
+          path: release/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      # Only this job has a write token. It never executes app source or
+      # downloaded release artifacts, which were built in the read-only job.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/download-artifact@v7
+        with:
+          name: lossless-video-cutter-release
+          path: release
+      - name: Verify all release assets and the exact version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" == "v$RELEASE_VERSION" ]]
+          [[ "$(node -p "require('./app.config.json').version")" == "$RELEASE_VERSION" ]]
+          test -s "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.html"
+          test -s "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.self-extract.html"
+          test -s "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.zip"
+          test -s release/SHA256SUMS.txt
+          ( cd release && sha256sum --check SHA256SUMS.txt )
+      - name: Create annotated tag once, then publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch origin --tags
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_TAG" >/dev/null; then
+            tagged_commit="$(git rev-list -n 1 "$RELEASE_TAG")"
+            if [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+              echo "Tag $RELEASE_TAG already points to $tagged_commit, not $GITHUB_SHA. Refusing to move it." >&2
+              exit 1
+            fi
+            echo "Found existing tag $RELEASE_TAG at this commit; resuming publication."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$RELEASE_TAG" "$GITHUB_SHA" -m "Lossless Video Cutter $RELEASE_TAG"
+            git push origin "refs/tags/$RELEASE_TAG"
+            echo "Created annotated tag $RELEASE_TAG."
+          fi
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; not overwriting it."
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" \
+            "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.html" \
+            "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.self-extract.html" \
+            "release/htmlapps-lossless-video-cutter-$RELEASE_TAG.zip" \
+            "release/SHA256SUMS.txt" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "Lossless Video Cutter $RELEASE_TAG" \
+            --generate-notes
+          echo "Published GitHub Release $RELEASE_TAG."
