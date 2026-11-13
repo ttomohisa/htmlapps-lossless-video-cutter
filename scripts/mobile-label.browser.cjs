@@ -19,6 +19,25 @@ async function main(){
  await page.locator(langButton).waitFor();
  if(await page.locator('html').getAttribute('lang')!==language)await page.locator(langButton).click();
  assert.equal(await page.locator('#helpButton svg path').last().evaluate(el=>getComputedStyle(el).strokeLinecap),'round',label+': Help dot has round caps');
+ const help=page.locator('#helpButton');
+ assert.equal((await help.textContent()).trim(),'',label+': icon-only Help must have no visible text');
+ assert.equal(await help.getAttribute('aria-label'),language==='ja'?'ヘルプ':'Help',label+': accessible Help name');
+ assert.ok(await help.evaluate(el=>{const r=el.getBoundingClientRect();return r.width>=40&&r.height>=40;}),label+': Help touch target is 40px or larger');
+ assert.equal((await page.locator('.intro-copy').textContent()).trim(),
+  language==='ja'?'映像・音声を再圧縮せず、動画の必要な範囲を切り出します。':'Cut the selected video range without re-encoding its video or audio.',
+  label+': concise intro');
+ assert.ok(await page.locator('#dropZone').evaluate(el=>{
+  const style=getComputedStyle(el),pseudo=getComputedStyle(el,'::before');
+  return style.backgroundImage==='none'&&(pseudo.content==='none'||pseudo.content==='normal')&&style.backgroundColor!=='rgba(0, 0, 0, 0)';
+ }),label+': drop area has a flat background without overlay');
+ assert.ok(await page.locator('#fileInput').evaluate(el=>{
+  const zone=el.closest('#dropZone'),singleTabStop=zone.tabIndex===-1&&el.tabIndex===0;
+  el.focus();
+  const focused=document.activeElement===el;
+  const ring=getComputedStyle(zone).outlineStyle==='solid';
+  el.blur();
+  return singleTabStop&&focused&&ring;
+ }),label+': keyboard file picker has one visible focus target');
  const headerVersion=page.locator('#versionBadge');
  assert.equal((await headerVersion.textContent()).trim(),'v'+require('../app.config.json').version,label+': current header version');
  assert.equal(await headerVersion.isVisible(),true,label+': header version visible');

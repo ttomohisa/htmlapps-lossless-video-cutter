@@ -5,7 +5,7 @@
       "id": "ffmpeg-wasm-builder",
       "source": "github-release",
       "repository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-      "version": "1.1.0",
+      "version": "1.10.8",
       "releaseAsset": "ffmpeg-wasm-lossless-video-cutter-v{version}.zip",
       "checksumsAsset": "SHA256SUMS.txt",
       "sourceAsset": "ffmpeg-wasm-sources-v{version}.tar.gz",
