@@ -84,3 +84,9 @@ The Japanese label 完全ローカル処理 uses the English text Fully local pr
 ## Header visibility
 
 Restore the round bottom dot in the Help question-mark icon without changing layout or controls. Verify Japanese and English at 320px, 360px, 390px and desktop widths.
+
+## 1.0.6 corrective work (release-gated)
+
+- The result's saved duration is sourced from the completed file's browser media metadata when available. Before or without usable metadata, any duration is marked as approximate and uses the **actual** (keyframe-aligned) start.
+- Avoid redundant copies when transferring the newly decoded WASM bytes and a whole MEMFS readFile output ArrayBuffer. This reduces peak usage but does not make the output streamable.
+- The bundled Builder v1.1.0 still has the end-of-cut B-frame/audio and multi-track restrictions until a corrected upstream Builder release is available. Do not claim those upstream defects are fixed in an app-only patch.
