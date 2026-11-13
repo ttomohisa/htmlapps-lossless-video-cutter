@@ -217,3 +217,9 @@ The generated standalone HTML also embeds the LGPL-2.1-or-later FFmpeg core desc
 ### Regression checks
 
 Use Node.js 24 or newer and PowerShell to run `./scripts/check-repository.ps1`. The check runs deterministic UI lifecycle/range tests against the template and generated standalone HTML, in addition to the source network boundary, verified FFmpeg build, self-extract verification, and root distribution parity checks. To run only the UI tests: `node --test tests/lossless-video-cutter.test.mjs`. These tests simulate Workers and media metadata; real media and browser checks remain complementary.
+
+## Current output limits (bundled Builder v1.1.0)
+
+The saved-video duration is read from the resulting media when your browser supports its container/codec; otherwise, the UI shows an approximate duration derived from the requested end and actual keyframe-aligned start. This estimate is not a promise of frame-accurate cutting.
+
+The currently embedded runtime copies one selected video track and one selected audio track, and drops subtitles and other tracks. A separate upstream Builder fix is being prepared; this limitation remains until a tested release is pinned and bundled in this app. For large outputs, browser memory can still be exhausted even though the input is read in slices.
