@@ -53,6 +53,25 @@ async function runCase(browser, language, width, height) {
     assert.equal(bytes.subarray(4, 8).toString('ascii'), 'ftyp', label + ': invalid MP4 header');
     assert.ok(bytes.includes(Buffer.from('moov')), label + ': missing movie header');
     assert.ok(bytes.includes(Buffer.from('mdat')), label + ': missing media data');
+    // After a completed export, changing the audio option must discard the
+    // stale result; a second real WASM invocation must produce a silent MP4.
+    if (width > 640) {
+      await page.locator('#removeAudio').check();
+      assert.equal(await page.locator('#resultCard.is-visible').count(), 0,
+        label + ': old download must be invalidated after changing audio option');
+      await page.locator('#cutButton').click();
+      await page.locator('#resultCard.is-visible').waitFor({timeout: 100000});
+      assert.equal(await page.locator('#removeAudio').isChecked(), true);
+      const silentPromise = page.waitForEvent('download', {timeout: 20000});
+      await page.locator('#downloadButton').click();
+      const silent = await silentPromise;
+      const silentBytes = fs.readFileSync(await silent.path());
+      assert.ok(silentBytes.length > 1024 && silentBytes.includes(Buffer.from('avc1')),
+        label + ': video missing from silent output');
+      assert.equal(silentBytes.includes(Buffer.from('mp4a')), false,
+        label + ': --no-audio output contains AAC tracks');
+      console.log('PASS app-WASM no-audio ' + label + ' downloaded=' + silentBytes.length);
+    }
     assert.deepEqual(errors, [], label + ': script errors');
     assert.deepEqual(externalRequests, [], label + ': unexpected network request');
     console.log('PASS app-WASM ' + label + ' downloaded=' + bytes.length);
@@ -67,11 +86,55 @@ async function runCase(browser, language, width, height) {
   }
 }
 
+// A damaged but correctly named media file must not leave the app locked or
+// corrupt its next selection. The source is constructed locally, not uploaded.
+async function runErrorRecovery(browser) {
+  const context = await browser.newContext({
+    viewport: {width: 1360, height: 900}, locale: 'ja', reducedMotion: 'reduce'
+  });
+  const page = await context.newPage();
+  const uncaught = [];
+  page.on('pageerror', error => uncaught.push(error.message));
+  try {
+    await page.goto(pathToFileURL(path.resolve(__dirname, '../dist/index.html')).href);
+    await page.locator('#fileInput').setInputFiles({
+      name: 'damaged.mp4', mimeType: 'video/mp4',
+      buffer: Buffer.from('not an MP4 video file')
+    });
+    await page.locator('#filePanel.is-visible').waitFor({timeout: 12000});
+    await page.locator('#endInput').fill('0:00.500');
+    await page.locator('#endInput').press('Tab');
+    await page.locator('#cutButton').click();
+    await page.waitForFunction(() =>
+      !document.body.classList.contains('is-processing') &&
+      !!document.querySelector('.toast.error'), {timeout: 45000});
+    assert.equal(await page.locator('#resultCard.is-visible').count(), 0);
+    assert.equal(await page.locator('#cutButton').isEnabled(), true,
+      'cut control remains usable after a failed export');
+    await page.locator('#clearFileButton').click();
+    assert.equal(await page.locator('#dropZone').isVisible(), true,
+      'clearing a bad file restores the picker');
+    await page.locator('#fileInput').setInputFiles(
+      path.resolve(__dirname, '../assets/lossless-video-cutter-en.mp4')
+    );
+    await page.locator('#filePanel.is-visible').waitFor({timeout: 12000});
+    await page.locator('#endInput').fill('0:01.200');
+    await page.locator('#endInput').press('Tab');
+    await page.locator('#cutButton').click();
+    await page.locator('#resultCard.is-visible').waitFor({timeout: 100000});
+    assert.deepEqual(uncaught, [], 'failed cutter must not cause uncaught errors');
+    console.log('PASS app-WASM corrupt-input recovery');
+  } finally {
+    await context.close();
+  }
+}
+
 async function main() {
   const browser = await chromium.launch();
   try {
     await runCase(browser, 'ja', 1360, 900);
     await runCase(browser, 'en', 390, 844);
+    await runErrorRecovery(browser);
   } finally {
     await browser.close();
   }
