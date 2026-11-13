@@ -147,12 +147,12 @@ GitHub Pagesがまだ有効になっていない場合も、ビルド・検証�
 
 ### FFmpeg WASMを更新する
 
-現在は **FFmpeg WASM Builder v1.1.0** の `lossless-video-cutter` profileを固定しています。
+現在は **FFmpeg WASM Builder v1.10.8** の `lossless-video-cutter` profileを固定しています。
 
 互換性のあるBuilder Releaseを公開したら、次のように更新できます。
 
 ```bat
-update-ffmpeg.bat 1.2.0
+update-ffmpeg.bat 1.10.8
 ```
 
 `dependencies.json` の固定バージョンを変更 → Release取得 → SHA-256検証 → 再ビルドまで自動実行し、ビルドに失敗した場合は以前のバージョンへ戻します。
@@ -198,8 +198,8 @@ GitHub Pages版では最初のHTML配信は発生しますが、選択した動�
 
 | コンポーネント | バージョン | ライセンス | 用途 |
 | --- | ---: | --- | --- |
-| FFmpeg WASM Builder | 1.1.0 | Builder/runtime sourceはMIT | 再現可能な小型WASMビルドとブラウザruntime |
-| 生成FFmpeg core | Builder v1.1.0 `lossless-video-cutter` profile | LGPL-2.1-or-later | demux、seek、stream copy、remux |
+| FFmpeg WASM Builder | 1.10.8 | Builder/runtime sourceはMIT | 再現可能な小型WASMビルドとブラウザruntime |
+| 生成FFmpeg core | Builder v1.10.8 `lossless-video-cutter` profile | LGPL-2.1-or-later | demux、seek、stream copy、remux |
 
 生成するFFmpeg coreにはx264やVideo Compressor用のGPL profileは含めていません。詳細は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。正確なRelease archive / 対応ソースのSHA-256は `dist/dependency-manifest.json` に記録されます。
 
@@ -221,8 +221,8 @@ Copyright © 2026 ttomohisa
 
 Node.js 24以降とPowerShellで `./scripts/check-repository.ps1` を実行してください。テンプレートと生成HTMLのUI回帰テスト、ネットワーク境界、FFmpegの検証済みビルド、自己展開版、ルート配布HTMLの一致を検証します。UIテストのみは `node --test tests/lossless-video-cutter.test.mjs` です。Worker・メディア情報は模擬し、実動画・ブラウザの確認は別途行います。
 
-## 現在の出力上の制限（内蔵Builder v1.1.0）
+## 現在の出力上の制限（内蔵Builder v1.10.8）
 
 保存した動画の再生時間をブラウザが取得できる場合は、その値を結果欄に表示します。読み取れない場合は、指定終了位置とキーフレームへ調整された開始位置から計算した概算を表示します。フレーム単位の正確な切り出しを保証する値ではありません。
 
-現在組み込まれているエンジンは映像1本・音声1本のみを保持し、字幕やその他のトラックは出力しません。別途修正しているFFmpeg WASM Builderの正式リリースを取り込み、実際のブラウザで検証するまで、この制限は残ります。入力の分割読み込みに対応していますが、大きな出力はブラウザのメモリ不足になることがあります。
+内蔵のBuilder v1.10.8は、映像1本と音声の全トラックを出力します（「音声を削除」を選んだ場合は音声なし）。出力形式が対応する字幕も保持しますが、非対応の字幕は除外され、音声と出力形式の組み合わせによっては切り出しに失敗します。2本目以降の映像、チャプター、添付ファイルなどは保持しません。Bフレームの参照画像を残すため、完成動画の末尾が指定時刻をわずかに超えることがあります。入力は分割して読み込みますが、大きな出力ではメモリ不足になることがあります。
