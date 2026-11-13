@@ -5,6 +5,9 @@
 - Pin and embed FFmpeg WASM Builder v1.10.8 with verified release SHA-256, preserving compatible multiple audio tracks and subtitles.
 - Add duration and transfer regression tests.
 - Fix trailing B-frame reference and AAC packet loss at the requested end through the v1.10.8 stream-copy runner. The actual end can be slightly later when reference frames are required.
+- Simplify the header Help control to its accessible question-mark icon, remove the tinted overlay from the video drop zone, and shorten Japanese and English introduction text.
+- Remove a duplicate keyboard tab stop on the transparent video file picker; the native input now provides the visible focus outline.
+- Extend real Chromium desktop/mobile regression checks to cover these UI changes, silent repeat exports and recovery after damaged input.
 
 ## 1.0.4 - 2026-10-10
 
