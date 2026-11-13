@@ -35,6 +35,11 @@ jobs:
         shell: pwsh
         run: .\scripts\check-repository.ps1
 
+      - name: Verify versioned GitHub Release packaging
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw -Encoding UTF8 app.config.json | ConvertFrom-Json).version
+          ./scripts/package-release.ps1 -Version $version
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v7
         with:
