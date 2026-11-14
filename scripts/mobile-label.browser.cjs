@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require('playwright');
-const cfg={"language": "#languageButton", "help": "#helpButton", "modal": "#helpDialog", "scroll": "#helpDialog", "end": "#versionText", "badge": "[data-i18n=\"privacy\"]", "hide": 640, "header": "#helpDialog .help-head"};
+const cfg={"language": "#languageButton", "help": "#helpButton", "modal": "#helpDialog", "scroll": "#helpDialog", "end": "#versionText", "badge": "[data-i18n=\"privacy\"]", "hide": 640, "footer": 760, "header": "#helpDialog .help-head"};
 const evidence=path.resolve('test-results/mobile-label');
 async function main(){
  fs.mkdirSync(evidence,{recursive:true});const browser=await chromium.launch();
