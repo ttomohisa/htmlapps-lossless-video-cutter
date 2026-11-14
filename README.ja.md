@@ -118,6 +118,17 @@ H.264 / HEVCなどのフレーム間圧縮では、出力の先頭に単独で�
 
 GitHub Pagesがまだ有効になっていない場合も、ビルド・検証までは成功させ、ActionsのSummaryへ有効化手順を表示してデプロイだけをスキップします。
 
+## バージョンタグとGitHub Releaseの自動作成
+
+PRを`main`へマージすると、`Publish versioned GitHub Release` が `app.config.json` のバージョンを確認します。未公開バージョンであれば、単一HTMLのビルド・検査に成功した後で `vX.Y.Z` の注釈付きタグとGitHub Releaseを作成します。Releaseには次の4ファイルを含めます。
+
+- `htmlapps-lossless-video-cutter-vX.Y.Z.html`：オフラインでも利用できる単一HTML
+- `htmlapps-lossless-video-cutter-vX.Y.Z.self-extract.html`：自己展開版HTML
+- `htmlapps-lossless-video-cutter-vX.Y.Z.zip`：両HTML、日英README、ライセンス表記、FFmpeg依存関係・対応ソースの記録
+- `SHA256SUMS.txt`：配布する3形式のSHA-256チェックサム
+
+同じバージョンのReleaseが存在する場合は、タグや配布物を上書きしません。**次のバージョンを公開するときは、マージ前に`app.config.json`のバージョンを更新**してください。タグ作成後に公開が失敗した場合は、Actionsの `Publish versioned GitHub Release` から手動再実行できます（タグが現在のコミットを指す場合のみ）。ビルドは読み取り権限で行い、書き込み権限は公開専用ジョブに限定します。
+
 ## 開発とビルド
 
 ```text
@@ -132,7 +143,8 @@ GitHub Pagesがまだ有効になっていない場合も、ビルド・検証�
 │  ├─ check-repository.ps1          # リポジトリ全体・ビルド検証
 │  ├─ verify-standalone.ps1         # 単一HTML・通信遮断検証
 │  ├─ build-self-extract.ps1        # 自己解凍HTML生成
-│  └─ update-ffmpeg.ps1             # Release更新・失敗時ロールバック
+│  ├─ update-ffmpeg.ps1             # Release更新・失敗時ロールバック
+│  └─ package-release.ps1           # 署名なしSHA-256照合付きRelease構成物
 ├─ dist/
 │  ├─ index.html                    # 生成される単一HTML
 │  ├─ index.self-extract.html       # 自己解凍形式
@@ -140,7 +152,8 @@ GitHub Pagesがまだ有効になっていない場合も、ビルド・検証�
 └─ .github/workflows/
    ├─ build-standalone.yml          # Pull Request時の単一HTML検証
    ├─ validate.yml                  # ソース・ビルド検証
-   └─ deploy-pages.yml              # mainからPagesへ自動公開
+   ├─ deploy-pages.yml              # mainからPagesへ自動公開
+   └─ release.yml                   # mainへのマージ後にタグ・GitHub Releaseを作成
 ```
 
 通常のビルドでは、Browser Kittyや直接ダウンロード用として `dist/index.html` をリポジトリ直下の `lossless-video-cutter.html` にもコピーします。

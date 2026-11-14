@@ -1,4 +1,4 @@
-## 1.0.6 - Unreleased
+## 1.0.6 - 2026-11-14
 
 - Display the saved video's duration from its metadata when playable; use an explicitly approximate estimate otherwise, including the adjusted keyframe start.
 - Transfer the existing WASM and complete MEMFS output buffers without unnecessary ArrayBuffer copies.
@@ -8,6 +8,7 @@
 - Simplify the header Help control to its accessible question-mark icon, remove the tinted overlay from the video drop zone, and shorten Japanese and English introduction text.
 - Remove a duplicate keyboard tab stop on the transparent video file picker; the native input now provides the visible focus outline.
 - Extend real Chromium desktop/mobile regression checks to cover these UI changes, silent repeat exports and recovery after damaged input.
+- Automatically create a versioned GitHub Release and annotated tag after the version is merged to main, with pre-release build checks, a checksum-verified download ZIP, and safe retries.
 
 ## 1.0.4 - 2026-10-10
 

@@ -117,6 +117,17 @@ Each push to `main` rebuilds the standalone HTML from the pinned FFmpeg WASM rel
 
 If Pages has not been enabled yet, the workflow still builds and validates the app and writes setup instructions to the Actions summary instead of failing the build.
 
+## Versioned GitHub Releases
+
+After a pull request is merged into `main`, `Publish versioned GitHub Release` reads `app.config.json` and, if the version does not already have a Release, runs the full standalone verification before creating an annotated `vX.Y.Z` tag and GitHub Release. The Release contains:
+
+- `htmlapps-lossless-video-cutter-vX.Y.Z.html`: offline-ready single HTML.
+- `htmlapps-lossless-video-cutter-vX.Y.Z.self-extract.html`: compact self-extracting HTML.
+- `htmlapps-lossless-video-cutter-vX.Y.Z.zip`: both HTML files, bilingual README files, license notices, and exact FFmpeg dependency/source manifests.
+- `SHA256SUMS.txt`: SHA-256 checksums for the three downloadable formats.
+
+Existing tags and published Releases are not moved or overwritten. Merging further PRs **without increasing `app.config.json`'s version** will not produce duplicate Releases. To release a new version, update the app version before merging. If publication fails after creating the tag, rerun the workflow through **Actions → Publish versioned GitHub Release → Run workflow**; it resumes only when the tag belongs to the current commit. The workflow uses a read-only build job and gives write access only to the final publishing job.
+
 ## Development and build layout
 
 ```text
@@ -131,7 +142,8 @@ If Pages has not been enabled yet, the workflow still builds and validates the a
 │  ├─ check-repository.ps1          # Full repository/build validation
 │  ├─ verify-standalone.ps1         # Standalone runtime/network checks
 │  ├─ build-self-extract.ps1        # Self-extracting HTML generator
-│  └─ update-ffmpeg.ps1             # Release update + rollback logic
+│  ├─ update-ffmpeg.ps1             # Release update + rollback logic
+│  └─ package-release.ps1           # Verified versioned Release archives
 ├─ dist/
 │  ├─ index.html                    # Generated standalone app
 │  ├─ index.self-extract.html       # Generated self-extracting variant
@@ -139,7 +151,8 @@ If Pages has not been enabled yet, the workflow still builds and validates the a
 └─ .github/workflows/
    ├─ build-standalone.yml          # Pull request standalone validation
    ├─ validate.yml                  # Source/build validation
-   └─ deploy-pages.yml              # Automatic Pages deployment from main
+   ├─ deploy-pages.yml              # Automatic Pages deployment from main
+   └─ release.yml                   # Annotated version tag + GitHub Release on main
 ```
 
 The normal build also copies `dist/index.html` to `lossless-video-cutter.html` at the repository root for Browser Kitty and direct-download distribution.
